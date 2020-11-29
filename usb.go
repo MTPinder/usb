@@ -627,11 +627,19 @@ func (h *DeviceHandle) Device() *Device {
 
 // Claim an interface on a given device handle.
 func (h *DeviceHandle) ClaimInterface(num byte) error {
+	if h == nil {
+		return nil
+	}
+
 	return toErr(C.libusb_claim_interface(h.me(), C.int(num)))
 }
 
 // Release an interface previously claimed with libusb_claim_interface().
 func (h *DeviceHandle) ReleaseInterface(num byte) error {
+	if h == nil {
+		return nil
+	}
+
 	return toErr(C.libusb_release_interface(h.me(), C.int(num)))
 }
 
