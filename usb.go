@@ -697,11 +697,19 @@ func (h *DeviceHandle) InterruptTransfer(endpoint byte, data []byte, timeout int
 
 // Perform a USB port reset to reinitialize a device.
 func (h *DeviceHandle) Reset() error {
+	if h == nil {
+		return nil
+	}
+
 	return toErr(C.libusb_reset_device(h.me()))
 }
 
 // Clear an halt/stall for a endpoint.
 func (h *DeviceHandle) ClearHalt(endpoint byte) error {
+	if h == nil {
+		return nil
+	}
+
 	return toErr(C.libusb_clear_halt(h.me(), C.uchar(endpoint)))
 }
 
