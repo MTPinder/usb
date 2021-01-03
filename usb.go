@@ -616,12 +616,21 @@ func (h *DeviceHandle) me() *C.libusb_device_handle {
 
 // Close a device handle.
 func (h *DeviceHandle) Close() error {
+	if h == nil {
+		return nil
+	}
+
 	C.libusb_close(h.me())
+
 	return nil
 }
 
 // Get the underlying device for a handle.
 func (h *DeviceHandle) Device() *Device {
+	if h == nil {
+		return nil
+	}
+
 	return (*Device)(C.libusb_get_device(h.me()))
 }
 
