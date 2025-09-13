@@ -1,3 +1,3 @@
-module github.com/mallardluna/usb
+module github.com/MTPinder/usb
 
 go 1.25
