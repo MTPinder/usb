@@ -9,7 +9,6 @@ package usb
 import "C"
 import (
 	"fmt"
-	"reflect"
 	"unsafe"
 )
 
@@ -226,8 +225,7 @@ type Interface struct {
 func (f *Interface) fromC(c *C.struct_libusb_interface) {
 	f.AltSetting = make([]InterfaceDescriptor, c.num_altsetting)
 
-	ds := []C.struct_libusb_interface_descriptor{}
-	cSlice(unsafe.Pointer(&ds), unsafe.Pointer(c.altsetting), c.num_altsetting)
+	ds := cSlice(c.altsetting, c.num_altsetting)
 	for i, s := range ds {
 		f.AltSetting[i].fromC(&s)
 	}
@@ -315,20 +313,11 @@ func (e *EndpointDescriptor) String() string {
 }
 
 func byteArrToSlice(a *C.uchar, n C.int) []byte {
-	var g []C.uchar
-
-	b := make([]byte, int(n))
-	for i, c := range g {
-		b[i] = byte(c)
-	}
-	return b
+	return unsafe.Slice((*byte)(a), n)
 }
 
-func cSlice(slice unsafe.Pointer, arr unsafe.Pointer, n C.int) {
-	h := (*reflect.SliceHeader)(slice)
-	h.Cap = int(n)
-	h.Len = int(n)
-	h.Data = uintptr(unsafe.Pointer(arr))
+func cSlice[T any](arr *T, n C.int) []T {
+	return unsafe.Slice(arr, n)
 }
 
 func (d *EndpointDescriptor) fromC(c *C.struct_libusb_endpoint_descriptor) {
@@ -394,8 +383,7 @@ func (d *InterfaceDescriptor) fromC(c *C.struct_libusb_interface_descriptor) {
 	d.InterfaceStringIndex = byte(c.iInterface)
 	d.EndPoints = make([]EndpointDescriptor, c.bNumEndpoints)
 
-	cs := []C.struct_libusb_endpoint_descriptor{}
-	cSlice(unsafe.Pointer(&cs), unsafe.Pointer(c.endpoint), C.int(c.bNumEndpoints))
+	cs := cSlice(c.endpoint, C.int(c.bNumEndpoints))
 	for i, s := range cs {
 		d.EndPoints[i].fromC(&s)
 	}
@@ -458,8 +446,7 @@ func (d *ConfigDescriptor) fromC(c *C.struct_libusb_config_descriptor) {
 
 	d.Interfaces = make([]Interface, c.bNumInterfaces)
 
-	cis := []C.struct_libusb_interface{}
-	cSlice(unsafe.Pointer(&cis), unsafe.Pointer(c._interface), C.int(c.bNumInterfaces))
+	cis := cSlice(c._interface, C.int(c.bNumInterfaces))
 	for i, iface := range cis {
 		d.Interfaces[i].fromC(&iface)
 	}
@@ -500,9 +487,9 @@ func (c *Context) GetDeviceList() (DeviceList, error) {
 	if count < 0 {
 		return nil, Error(count)
 	}
-	slice := &reflect.SliceHeader{uintptr(unsafe.Pointer(devs)), int(count), int(count)}
-	rdevs := *(*[]*Device)(unsafe.Pointer(slice))
-	return DeviceList(rdevs), nil
+	slice := unsafe.Slice(devs, int(count))
+	rdevs := *(*DeviceList)(unsafe.Pointer(&slice))
+	return rdevs, nil
 }
 
 func (d *Device) me() *C.libusb_device {

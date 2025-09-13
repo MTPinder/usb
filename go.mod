@@ -1,3 +1,3 @@
-module github.com/ganeshrvel/usb
+module github.com/mallardluna/usb
 
-go 1.15
+go 1.25
